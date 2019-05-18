@@ -1,49 +1,37 @@
+import com.google.zxing.WriterException;
+
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-class TicketPayload{
-    public String userId;
-    public String eventId;
-    public int pax;
-    public TicketPayload(String _userId,String _eventId,int _pax){
-        userId = _userId;
-        eventId = _eventId;
-        pax = _pax;
-    }
-}
+import java.util.Scanner;
 
 public class Main {
 
-    static String sha256(TicketPayload payload,String secret) throws NoSuchAlgorithmException{
-        // Extract Payload's Values
-         String userId = payload.userId;
-         String eventId = payload.eventId;
-         String pax = Integer.toString(payload.pax);
-         String val = userId+","+eventId+","+pax;
 
-        // Get algorithim instance
-        final MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-        // Calculate Digest Value (returns byte array)
-        byte[] result = mDigest.digest((val+secret).getBytes());
-        // StringBuffer to store Hex Digest
-        StringBuffer sb = new StringBuffer();
-        // Convert Digest Value(byte array) to Hex
-        for(int i = 0; i < result.length;i++){
-            sb.append(Integer.toString((result[i] & 0xff) + 0x100,16).substring(1));
-        }
-        // Return Digest as Hex String
-        return sb.toString();
-    }
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Username: ");
+        String user = sc.next();
+        System.out.println("Enter Number of Tickets(Pax): ");
+        int pax = sc.nextInt();
         // Ticket Payload
-        TicketPayload newPayload = new TicketPayload("100XFD","109NRB",2);
+        Ticket newPayload = new Ticket(user,"Oscars",pax);
+        // GEnerate QR
+        try {
+            QRGenerator.generateQRImage(newPayload, "./ticket.png");
+        }catch (WriterException e){
+
+        }catch (IOException e){
+
+        }
         // Hash Secret
         String SECRET = "1{%)* @:A";
         // Calculate Hash
-        String digest = sha256(newPayload,SECRET);
+        String digest = HashGenerator.sha256(newPayload,SECRET);
         // Output Hash
-        System.out.println(digest);
+        System.out.println("Ticket Hash Digest: "+digest);
+        System.out.println("Ticket QRCode generated (ticket.png)");
 
     }
 }
